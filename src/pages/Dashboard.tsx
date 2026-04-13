@@ -1,0 +1,112 @@
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { COMPANIONS } from '@/types/companion';
+import { getCompanionImage, getNeonClass, getNeonTextClass, getMoodEmoji } from '@/lib/companions';
+import { LogOut, MessageCircle, User, Sparkles } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+
+export default function Dashboard() {
+  const { user, signOut } = useAuth();
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(280,100%,65%,0.05),transparent_60%)]" />
+
+      {/* Header */}
+      <header className="relative z-10 flex items-center justify-between p-4 border-b border-border/50">
+        <h1 className="font-display text-lg tracking-wider">
+          <span className="text-neon-purple neon-glow-purple">AURA</span>
+          <span className="text-foreground">-</span>
+          <span className="text-neon-pink neon-glow-pink">LINK</span>
+        </h1>
+        <div className="flex items-center gap-3">
+          <Link to="/profile">
+            <Button variant="ghost" size="icon"><User className="w-4 h-4" /></Button>
+          </Link>
+          <Button variant="ghost" size="icon" onClick={signOut}><LogOut className="w-4 h-4" /></Button>
+        </div>
+      </header>
+
+      {/* Companions */}
+      <div className="relative z-10 p-4 max-w-2xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-6"
+        >
+          <h2 className="font-display text-xl tracking-wider text-foreground mb-1">Your Companions</h2>
+          <p className="text-muted-foreground text-sm">Choose who you want to spend time with</p>
+        </motion.div>
+
+        <div className="space-y-4">
+          {COMPANIONS.map((companion, i) => (
+            <motion.div
+              key={companion.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <Link to={`/chat/${companion.id}`}>
+                <div className={`glass rounded-xl overflow-hidden ${getNeonClass(companion.neon_color)} hover:scale-[1.02] transition-transform cursor-pointer`}>
+                  <div className="flex">
+                    <img
+                      src={getCompanionImage(companion.id)}
+                      alt={companion.name}
+                      className="w-28 h-36 object-cover"
+                    />
+                    <div className="flex-1 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className={`font-display text-sm tracking-wider ${getNeonTextClass(companion.neon_color)}`}>
+                          {companion.name}
+                        </h3>
+                        <span className="text-xs">{getMoodEmoji('neutral')}</span>
+                      </div>
+                      <p className="text-muted-foreground text-xs mb-3">{companion.tagline}</p>
+
+                      {/* Mini personality bars */}
+                      <div className="space-y-1.5">
+                        {Object.entries(companion.personality).slice(0, 3).map(([trait, val]) => (
+                          <div key={trait} className="flex items-center gap-2">
+                            <span className="text-[10px] text-muted-foreground w-16 capitalize">{trait}</span>
+                            <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary/70 rounded-full"
+                                style={{ width: `${val * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-3">
+                        <MessageCircle className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground">Tap to chat</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Quick action */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-8 text-center"
+        >
+          <Link to="/gallery">
+            <Button variant="outline" className="font-display text-xs tracking-wider border-border/50">
+              <Sparkles className="w-4 h-4 mr-2" />
+              VIEW GALLERY
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
