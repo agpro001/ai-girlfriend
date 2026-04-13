@@ -14,7 +14,209 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      companion_moods: {
+        Row: {
+          companion_id: string
+          id: string
+          intensity: number
+          mood: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          companion_id: string
+          id?: string
+          intensity?: number
+          mood?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          companion_id?: string
+          id?: string
+          intensity?: number
+          mood?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          companion_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          companion_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          companion_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          companion_id: string
+          created_at: string
+          entry: string
+          id: string
+          user_id: string
+          visible: boolean
+        }
+        Insert: {
+          companion_id: string
+          created_at?: string
+          entry: string
+          id?: string
+          user_id: string
+          visible?: boolean
+        }
+        Update: {
+          companion_id?: string
+          created_at?: string
+          entry?: string
+          id?: string
+          user_id?: string
+          visible?: boolean
+        }
+        Relationships: []
+      }
+      memories: {
+        Row: {
+          companion_id: string
+          created_at: string
+          id: string
+          keyword: string
+          summary: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          companion_id: string
+          created_at?: string
+          id?: string
+          keyword: string
+          summary: string
+          user_id: string
+          weight?: number
+        }
+        Update: {
+          companion_id?: string
+          created_at?: string
+          id?: string
+          keyword?: string
+          summary?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          mood: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          mood?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          mood?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen: string | null
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen?: string | null
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen?: string | null
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      trust_scores: {
+        Row: {
+          companion_id: string
+          id: string
+          last_interaction: string | null
+          score: number
+          total_messages: number
+          total_time_minutes: number
+          user_id: string
+        }
+        Insert: {
+          companion_id: string
+          id?: string
+          last_interaction?: string | null
+          score?: number
+          total_messages?: number
+          total_time_minutes?: number
+          user_id: string
+        }
+        Update: {
+          companion_id?: string
+          id?: string
+          last_interaction?: string | null
+          score?: number
+          total_messages?: number
+          total_time_minutes?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
