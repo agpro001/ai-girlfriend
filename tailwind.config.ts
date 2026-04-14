@@ -56,6 +56,7 @@ export default {
           blue: "hsl(var(--neon-blue))",
           purple: "hsl(var(--neon-purple))",
           gold: "hsl(var(--neon-gold))",
+          red: "hsl(var(--neon-red))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

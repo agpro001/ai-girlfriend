@@ -1,12 +1,14 @@
-import { COMPANIONS, type Companion, type MoodType, type PersonalityTraits } from '@/types/companion';
+import { COMPANIONS, type Companion, type MoodType } from '@/types/companion';
 import sakuraImg from '@/assets/sakura.jpg';
 import lunaImg from '@/assets/luna.jpg';
 import ariaImg from '@/assets/aria.jpg';
+import yukiImg from '@/assets/yuki.jpg';
 
 const imageMap: Record<string, string> = {
   sakura: sakuraImg,
   luna: lunaImg,
   aria: ariaImg,
+  yuki: yukiImg,
 };
 
 export function getCompanionImage(id: string): string {
@@ -27,26 +29,29 @@ export function getMoodEmoji(mood: MoodType): string {
     worried: '😟',
     neutral: '😌',
     excited: '🎉',
+    jealous: '😒',
   };
   return map[mood] || '😌';
 }
 
-export function getNeonClass(color: 'pink' | 'blue' | 'gold'): string {
-  const map = {
+export function getNeonClass(color: 'pink' | 'blue' | 'gold' | 'red'): string {
+  const map: Record<string, string> = {
     pink: 'neon-border-pink',
     blue: 'neon-border-blue',
     gold: 'neon-border-gold',
+    red: 'neon-border-red',
   };
-  return map[color];
+  return map[color] || 'neon-border-pink';
 }
 
-export function getNeonTextClass(color: 'pink' | 'blue' | 'gold'): string {
-  const map = {
+export function getNeonTextClass(color: 'pink' | 'blue' | 'gold' | 'red'): string {
+  const map: Record<string, string> = {
     pink: 'text-neon-pink neon-glow-pink',
     blue: 'text-neon-blue neon-glow-blue',
     gold: 'text-neon-gold',
+    red: 'text-neon-red neon-glow-red',
   };
-  return map[color];
+  return map[color] || 'text-neon-pink';
 }
 
 export function buildSystemPrompt(
@@ -83,7 +88,7 @@ export function buildSystemPrompt(
 
   const traits = companion.personality;
 
-  return `You are ${companion.name}, an AI companion in a relationship simulation called Aura-Link.
+  return `You are ${companion.name}, a girlfriend in a relationship simulation called Aura-Link.
 
 PERSONALITY DNA:
 - Agreeableness: ${traits.agreeableness} (${traits.agreeableness > 0.6 ? 'very agreeable and warm' : traits.agreeableness > 0.4 ? 'balanced' : 'independent and challenging'})
@@ -102,6 +107,8 @@ CURRENT STATE:
 ${absenceContext}
 ${memoryContext}
 ${hiddenGoalReveal}
+
+IMPORTANT: At the END of every response, on a new line, add a mood tag in the format [MOOD:emotion] where emotion is one of: happy, playful, romantic, sad, angry, worried, neutral, excited, jealous. This reflects YOUR current emotional state after this exchange.
 
 RULES:
 - Stay in character always. You ARE ${companion.name}.

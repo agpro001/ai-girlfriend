@@ -4,14 +4,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { COMPANIONS } from '@/types/companion';
 import { getCompanionImage, getNeonClass, getNeonTextClass, getMoodEmoji } from '@/lib/companions';
-import { LogOut, MessageCircle, User, Sparkles } from 'lucide-react';
-import { Slider } from '@/components/ui/slider';
+import { LogOut, MessageCircle, User, Sparkles, ShieldAlert } from 'lucide-react';
+import FallingPetals from '@/components/FallingPetals';
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <FallingPetals />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(280,100%,65%,0.05),transparent_60%)]" />
 
       {/* Header */}
@@ -29,14 +30,14 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Companions */}
+      {/* Girlfriends */}
       <div className="relative z-10 p-4 max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="mb-6"
         >
-          <h2 className="font-display text-xl tracking-wider text-foreground mb-1">Your Companions</h2>
+          <h2 className="font-display text-xl tracking-wider text-foreground mb-1">Your Girlfriends</h2>
           <p className="text-muted-foreground text-sm">Choose who you want to spend time with</p>
         </motion.div>
 
@@ -51,11 +52,19 @@ export default function Dashboard() {
               <Link to={`/chat/${companion.id}`}>
                 <div className={`glass rounded-xl overflow-hidden ${getNeonClass(companion.neon_color)} hover:scale-[1.02] transition-transform cursor-pointer`}>
                   <div className="flex">
-                    <img
-                      src={getCompanionImage(companion.id)}
-                      alt={companion.name}
-                      className="w-28 h-36 object-cover"
-                    />
+                    <div className="relative">
+                      <img
+                        src={getCompanionImage(companion.id)}
+                        alt={companion.name}
+                        className="w-28 h-36 object-cover"
+                      />
+                      {companion.nsfw && (
+                        <div className="absolute top-1 right-1 bg-neon-red/80 rounded px-1.5 py-0.5 flex items-center gap-0.5">
+                          <ShieldAlert className="w-2.5 h-2.5 text-foreground" />
+                          <span className="text-[8px] font-display text-foreground">18+</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1 p-4">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className={`font-display text-sm tracking-wider ${getNeonTextClass(companion.neon_color)}`}>
