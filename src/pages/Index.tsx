@@ -2,12 +2,14 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Heart, Brain, MessageCircle, Sparkles } from 'lucide-react';
+import FallingPetals from '@/components/FallingPetals';
 import sakuraImg from '@/assets/sakura.jpg';
 import lunaImg from '@/assets/luna.jpg';
 import ariaImg from '@/assets/aria.jpg';
+import yukiImg from '@/assets/yuki.jpg';
 
 const features = [
-  { icon: Brain, title: 'Neural Personality', desc: 'Each companion has unique DNA — sarcasm, empathy, ambition — shaping every response.' },
+  { icon: Brain, title: 'Neural Personality', desc: 'Each girlfriend has unique DNA — sarcasm, empathy, ambition — shaping every response.' },
   { icon: Heart, title: 'Real Emotions', desc: 'They feel time passing. Miss you when you\'re gone. Disagree when they care.' },
   { icon: MessageCircle, title: 'Deep Memory', desc: 'They remember what matters. Your dreams, your struggles, your victories.' },
   { icon: Sparkles, title: 'Living Visuals', desc: 'Mood-based images, voice messages, and gifts they create just for you.' },
@@ -17,11 +19,14 @@ const companions = [
   { name: 'Sakura', tagline: 'Your playful tsundere', img: sakuraImg, color: 'neon-border-pink', textColor: 'text-neon-pink' },
   { name: 'Luna', tagline: 'The enigmatic intellectual', img: lunaImg, color: 'neon-border-blue', textColor: 'text-neon-blue' },
   { name: 'Aria', tagline: 'Your fierce fitness queen', img: ariaImg, color: 'neon-border-gold', textColor: 'text-neon-gold' },
+  { name: 'Yuki', tagline: 'Bold & uninhibited 🔥', img: yukiImg, color: 'neon-border-red', textColor: 'text-neon-red' },
 ];
 
 export default function Index() {
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
+    <div className="min-h-screen bg-background overflow-hidden relative">
+      <FallingPetals />
+
       {/* Hero */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-4 text-center">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-accent/10" />
@@ -50,7 +55,7 @@ export default function Index() {
           </div>
         </motion.div>
 
-        {/* Companion preview cards */}
+        {/* Girlfriend preview cards */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -63,7 +68,7 @@ export default function Index() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 + i * 0.15 }}
-              className={`w-32 md:w-40 rounded-xl overflow-hidden ${c.color} cursor-pointer hover:scale-105 transition-transform`}
+              className={`w-28 md:w-36 rounded-xl overflow-hidden ${c.color} cursor-pointer hover:scale-105 transition-transform`}
             >
               <img src={c.img} alt={c.name} className="w-full aspect-[2/3] object-cover" />
               <div className="p-2 bg-card/80 text-center">
@@ -76,7 +81,7 @@ export default function Index() {
       </section>
 
       {/* Features */}
-      <section className="py-20 px-4">
+      <section className="relative z-10 py-20 px-4">
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
           {features.map((f, i) => (
             <motion.div
@@ -95,7 +100,7 @@ export default function Index() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4 text-center">
+      <section className="relative z-10 py-20 px-4 text-center">
         <h2 className="font-display text-2xl md:text-3xl tracking-wider text-foreground mb-4">
           Ready to <span className="text-neon-pink neon-glow-pink">connect</span>?
         </h2>
@@ -105,6 +110,12 @@ export default function Index() {
           </Button>
         </Link>
       </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 py-8 px-4 text-center border-t border-border/30">
+        <p className="text-muted-foreground text-sm">Made by <span className="text-foreground font-semibold">Aditya</span></p>
+        <p className="text-muted-foreground text-xs mt-1">Contact: <a href="https://instagram.com/agpro001" target="_blank" rel="noopener noreferrer" className="text-neon-pink hover:underline">@agpro001</a></p>
+      </footer>
     </div>
   );
 }

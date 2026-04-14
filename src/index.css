@@ -40,6 +40,7 @@
     --neon-blue: 200 100% 50%;
     --neon-purple: 280 100% 65%;
     --neon-gold: 40 100% 55%;
+    --neon-red: 0 100% 50%;
 
     --sidebar-background: 240 12% 8%;
     --sidebar-foreground: 220 20% 92%;
@@ -83,6 +84,10 @@
     text-shadow: 0 0 7px hsl(280, 100%, 65%), 0 0 10px hsl(280, 100%, 65%), 0 0 21px hsl(280, 100%, 65%);
   }
 
+  .neon-glow-red {
+    text-shadow: 0 0 7px hsl(0, 100%, 50%), 0 0 10px hsl(0, 100%, 50%), 0 0 21px hsl(0, 100%, 50%);
+  }
+
   .neon-border {
     box-shadow: 0 0 5px hsl(280, 100%, 65%), 0 0 10px hsl(280, 100%, 65%, 0.3), inset 0 0 5px hsl(280, 100%, 65%, 0.1);
   }
@@ -97,6 +102,10 @@
 
   .neon-border-gold {
     box-shadow: 0 0 5px hsl(40, 100%, 55%), 0 0 10px hsl(40, 100%, 55%, 0.3), inset 0 0 5px hsl(40, 100%, 55%, 0.1);
+  }
+
+  .neon-border-red {
+    box-shadow: 0 0 5px hsl(0, 100%, 50%), 0 0 10px hsl(0, 100%, 50%, 0.3), inset 0 0 5px hsl(0, 100%, 50%, 0.1);
   }
 
   .glass {
