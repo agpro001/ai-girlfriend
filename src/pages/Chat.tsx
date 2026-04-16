@@ -23,6 +23,8 @@ export default function Chat() {
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messages, isLoading, isLoadingHistory, sendMessage, playVoice, generateImage, isPlayingVoice, isGeneratingImage, currentMood } = useChat(companionId || '', user?.id || '');
+  const [showFlash, setShowFlash] = useState(false);
+  const prevMood = useRef(currentMood);
 
   // Check age gate for NSFW companions
   useEffect(() => {

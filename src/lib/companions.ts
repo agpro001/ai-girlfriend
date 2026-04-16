@@ -30,6 +30,9 @@ export function getMoodEmoji(mood: MoodType): string {
     neutral: '😌',
     excited: '🎉',
     jealous: '😒',
+    seductive: '🔥',
+    passionate: '❤️‍🔥',
+    intimate: '💋',
   };
   return map[mood] || '😌';
 }
