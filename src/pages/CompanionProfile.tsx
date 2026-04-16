@@ -113,10 +113,15 @@ export default function CompanionProfile() {
           </div>
         </motion.div>
 
-        <div className="text-center">
+        <div className="flex justify-center gap-3">
           <Link to={`/chat/${companion.id}`}>
             <Button className="font-display text-xs tracking-widest bg-primary hover:bg-primary/80 neon-border">
               START CHATTING
+            </Button>
+          </Link>
+          <Link to={`/stats/${companion.id}`}>
+            <Button variant="outline" className="font-display text-xs tracking-widest border-border/50">
+              VIEW STATS
             </Button>
           </Link>
         </div>
