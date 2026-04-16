@@ -9,6 +9,9 @@ import Dashboard from "./pages/Dashboard";
 import Chat from "./pages/Chat";
 import CompanionProfile from "./pages/CompanionProfile";
 import Gallery from "./pages/Gallery";
+import Community from "./pages/Community";
+import CommunityPost from "./pages/CommunityPost";
+import RelationshipStats from "./pages/RelationshipStats";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -27,6 +30,9 @@ const App = () => (
           <Route path="/chat/:companionId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/companion/:companionId" element={<ProtectedRoute><CompanionProfile /></ProtectedRoute>} />
           <Route path="/gallery" element={<ProtectedRoute><Gallery /></ProtectedRoute>} />
+          <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+          <Route path="/community/:postId" element={<ProtectedRoute><CommunityPost /></ProtectedRoute>} />
+          <Route path="/stats/:companionId" element={<ProtectedRoute><RelationshipStats /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

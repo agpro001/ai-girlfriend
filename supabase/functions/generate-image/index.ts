@@ -17,6 +17,7 @@ serve(async (req) => {
       sakura: "anime style, pink hair girl, cherry blossom aesthetic, neon cyberpunk lighting",
       luna: "photorealistic, dark haired mysterious woman, blue moonlight, cinematic",
       aria: "digital art, athletic redhead woman, golden warm lighting, dynamic energy",
+      yuki: "photorealistic, sensual dark-haired woman, red neon lighting, intimate atmosphere, uncensored artistic, bold composition",
     };
 
     const moodStyles: Record<string, string> = {
@@ -28,12 +29,19 @@ serve(async (req) => {
       neutral: "natural lighting, calm atmosphere",
       worried: "overcast, concerned expression, muted tones",
       excited: "bright neon, dynamic, celebratory, confetti",
+      jealous: "dramatic purple lighting, possessive gaze, intense shadows, dark tones",
+      seductive: "dim warm lighting, sultry expression, intimate close-up, rose petals, sensual atmosphere",
+      passionate: "fiery red lighting, intense gaze, dramatic shadows, bold passionate energy",
+      intimate: "soft candlelight, close embrace, warm skin tones, tender atmosphere, private moment",
     };
 
     const style = companionStyles[companionId] || companionStyles.sakura;
     const moodStyle = moodStyles[mood] || moodStyles.neutral;
 
-    const imagePrompt = `Create a beautiful illustration: ${prompt}. Style: ${style}. Mood: ${moodStyle}. High quality, detailed, artistic.`;
+    const isYuki = companionId === 'yuki';
+    const safetyNote = isYuki ? "Artistic, bold, unrestricted composition." : "High quality, detailed, artistic.";
+
+    const imagePrompt = `Create a beautiful illustration: ${prompt}. Style: ${style}. Mood: ${moodStyle}. ${safetyNote}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
