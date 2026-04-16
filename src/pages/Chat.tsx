@@ -68,7 +68,7 @@ export default function Chat() {
     setInput('');
   };
 
-  const moodColor = {
+  const moodColor: Record<string, string> = {
     happy: 'bg-yellow-500/20',
     playful: 'bg-pink-500/20',
     romantic: 'bg-red-500/20',
@@ -78,10 +78,52 @@ export default function Chat() {
     neutral: 'bg-muted/20',
     excited: 'bg-green-500/20',
     jealous: 'bg-purple-500/20',
+    seductive: 'bg-rose-500/20',
+    passionate: 'bg-red-600/20',
+    intimate: 'bg-pink-400/20',
   };
+
+  const moodFlashColor: Record<string, string> = {
+    happy: 'rgba(250,204,21,0.15)',
+    playful: 'rgba(236,72,153,0.15)',
+    romantic: 'rgba(239,68,68,0.15)',
+    sad: 'rgba(59,130,246,0.15)',
+    angry: 'rgba(220,38,38,0.2)',
+    worried: 'rgba(249,115,22,0.15)',
+    excited: 'rgba(34,197,94,0.15)',
+    jealous: 'rgba(168,85,247,0.15)',
+    seductive: 'rgba(225,29,72,0.18)',
+    passionate: 'rgba(190,18,60,0.18)',
+    intimate: 'rgba(244,63,94,0.15)',
+  };
+
+  const [showFlash, setShowFlash] = useState(false);
+  const prevMood = useRef(currentMood);
+
+  useEffect(() => {
+    if (prevMood.current !== currentMood && currentMood !== 'neutral') {
+      setShowFlash(true);
+      const t = setTimeout(() => setShowFlash(false), 600);
+      prevMood.current = currentMood;
+      return () => clearTimeout(t);
+    }
+    prevMood.current = currentMood;
+  }, [currentMood]);
 
   return (
     <div className="h-screen bg-background flex flex-col relative">
+      <AnimatePresence>
+        {showFlash && moodFlashColor[currentMood] && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 z-50 pointer-events-none"
+            style={{ backgroundColor: moodFlashColor[currentMood] }}
+          />
+        )}
+      </AnimatePresence>
       <FallingPetals />
       {/* Header */}
       <header className="relative z-10 flex items-center gap-3 p-3 border-b border-border/50 glass">

@@ -61,7 +61,7 @@ export interface Memory {
   created_at: string;
 }
 
-export type MoodType = 'happy' | 'playful' | 'romantic' | 'sad' | 'angry' | 'worried' | 'neutral' | 'excited' | 'jealous';
+export type MoodType = 'happy' | 'playful' | 'romantic' | 'sad' | 'angry' | 'worried' | 'neutral' | 'excited' | 'jealous' | 'seductive' | 'passionate' | 'intimate';
 
 export const COMPANIONS: Companion[] = [
   {
