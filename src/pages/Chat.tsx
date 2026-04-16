@@ -109,7 +109,7 @@ export default function Chat() {
     intimate: 'rgba(244,63,94,0.15)',
   };
 
-  // Mood flash effect moved to hooks section above early returns
+  
 
   return (
     <div className="h-screen bg-background flex flex-col relative">
