@@ -40,6 +40,16 @@ export default function Chat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    if (prevMood.current !== currentMood && currentMood !== 'neutral') {
+      setShowFlash(true);
+      const t = setTimeout(() => setShowFlash(false), 600);
+      prevMood.current = currentMood;
+      return () => clearTimeout(t);
+    }
+    prevMood.current = currentMood;
+  }, [currentMood]);
+
   const handleScroll = () => {
     if (!scrollRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
