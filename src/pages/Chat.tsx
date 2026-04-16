@@ -99,18 +99,7 @@ export default function Chat() {
     intimate: 'rgba(244,63,94,0.15)',
   };
 
-  const [showFlash, setShowFlash] = useState(false);
-  const prevMood = useRef(currentMood);
-
-  useEffect(() => {
-    if (prevMood.current !== currentMood && currentMood !== 'neutral') {
-      setShowFlash(true);
-      const t = setTimeout(() => setShowFlash(false), 600);
-      prevMood.current = currentMood;
-      return () => clearTimeout(t);
-    }
-    prevMood.current = currentMood;
-  }, [currentMood]);
+  // Mood flash effect moved to hooks section above early returns
 
   return (
     <div className="h-screen bg-background flex flex-col relative">
