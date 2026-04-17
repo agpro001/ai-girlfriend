@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      community_comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       community_comments: {
         Row: {
           content: string
@@ -75,33 +96,72 @@ export type Database = {
           },
         ]
       }
+      community_notifications: {
+        Row: {
+          actor_id: string
+          comment_id: string | null
+          created_at: string
+          id: string
+          post_id: string | null
+          read: boolean
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id: string
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          post_id?: string | null
+          read?: boolean
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          post_id?: string | null
+          read?: boolean
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       community_posts: {
         Row: {
           content: string
           created_at: string
           id: string
           image_url: string | null
+          tags: string[] | null
           title: string
           updated_at: string
           user_id: string
+          view_count: number
         }
         Insert: {
           content: string
           created_at?: string
           id?: string
           image_url?: string | null
+          tags?: string[] | null
           title: string
           updated_at?: string
           user_id: string
+          view_count?: number
         }
         Update: {
           content?: string
           created_at?: string
           id?: string
           image_url?: string | null
+          tags?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string
+          view_count?: number
         }
         Relationships: []
       }
@@ -256,6 +316,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           created_at: string
           id: string
           last_seen: string | null
@@ -263,6 +325,8 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           id?: string
           last_seen?: string | null
@@ -270,6 +334,8 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           id?: string
           last_seen?: string | null
