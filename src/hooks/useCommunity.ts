@@ -33,13 +33,56 @@ export interface CommunityComment {
 
 export type SortMode = 'new' | 'top' | 'hot';
 
+/** Extract @username tokens from content */
+const parseMentions = (text: string): string[] => {
+  const set = new Set<string>();
+  const re = /@(\w{2,30})/g;
+  let m;
+  while ((m = re.exec(text)) !== null) set.add(m[1]);
+  return [...set];
+};
+
+const sendMentionNotifications = async (
+  text: string,
+  actorId: string,
+  postId: string,
+  commentId?: string,
+  excludeUserIds: string[] = [],
+) => {
+  const usernames = parseMentions(text);
+  if (!usernames.length) return;
+  const { data: profs } = await supabase
+    .from('profiles')
+    .select('user_id, username')
+    .in('username', usernames);
+  if (!profs?.length) return;
+  const targets = profs
+    .map(p => p.user_id)
+    .filter(uid => uid !== actorId && !excludeUserIds.includes(uid));
+  if (!targets.length) return;
+  await supabase.from('community_notifications' as any).insert(
+    targets.map(uid => ({
+      user_id: uid, actor_id: actorId, type: 'mention', post_id: postId, comment_id: commentId || null,
+    })),
+  );
+};
+
 export function useCommunity(userId: string | undefined) {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortMode>('new');
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Load blocks
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from('community_blocks' as any).select('blocked_id').eq('blocker_id', userId).then(({ data }) => {
+      setBlockedIds(new Set((data as any[] | null)?.map(b => b.blocked_id) || []));
+    });
+  }, [userId]);
 
   const fetchPosts = useCallback(async () => {
     if (!userId) return;
@@ -55,7 +98,7 @@ export function useCommunity(userId: string | undefined) {
       const userIds = [...new Set(rawPosts.map(p => p.user_id))];
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('user_id, username, avatar_url')
+        .select('user_id, username, avatar_url, banned')
         .in('user_id', userIds);
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
@@ -78,16 +121,19 @@ export function useCommunity(userId: string | undefined) {
         commentCountMap.set(c.post_id, (commentCountMap.get(c.post_id) || 0) + 1);
       });
 
-      setPosts(rawPosts.map(p => ({
-        ...p,
-        tags: (p as any).tags || [],
-        view_count: (p as any).view_count || 0,
-        username: profileMap.get(p.user_id)?.username || 'Anonymous',
-        avatar_url: profileMap.get(p.user_id)?.avatar_url || null,
-        like_count: likeCountMap.get(p.id) || 0,
-        comment_count: commentCountMap.get(p.id) || 0,
-        user_liked: userLikedMap.get(p.id) || false,
-      })));
+      setPosts(rawPosts
+        .filter(p => !(profileMap.get(p.user_id) as any)?.banned)
+        .map(p => ({
+          ...p,
+          tags: (p as any).tags || [],
+          view_count: (p as any).view_count || 0,
+          username: profileMap.get(p.user_id)?.username || 'Anonymous',
+          avatar_url: (profileMap.get(p.user_id) as any)?.avatar_url || null,
+          like_count: likeCountMap.get(p.id) || 0,
+          comment_count: commentCountMap.get(p.id) || 0,
+          user_liked: userLikedMap.get(p.id) || false,
+        }))
+      );
     } catch (e) {
       console.error('fetchPosts error:', e);
     }
@@ -108,11 +154,12 @@ export function useCommunity(userId: string | undefined) {
 
   const createPost = async (title: string, content: string, imageUrl?: string, tags: string[] = []) => {
     if (!userId) return;
-    const { error } = await supabase.from('community_posts').insert({
+    const { data, error } = await supabase.from('community_posts').insert({
       user_id: userId, title, content, image_url: imageUrl || null, tags,
-    } as any);
-    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    else toast({ title: 'Posted!', description: 'Your post is live.' });
+    } as any).select('id').single();
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Posted!', description: 'Your post is live.' });
+    if (data?.id) await sendMentionNotifications(`${title} ${content}`, userId, data.id);
   };
 
   const toggleLike = async (postId: string, liked: boolean, postOwnerId?: string) => {
@@ -132,18 +179,19 @@ export function useCommunity(userId: string | undefined) {
 
   const addComment = async (postId: string, content: string, postOwnerId?: string) => {
     if (!userId) return;
-    const { error } = await supabase.from('community_comments').insert({
+    const { data, error } = await supabase.from('community_comments').insert({
       post_id: postId, user_id: userId, content,
-    });
+    }).select('id').single();
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return;
     }
     if (postOwnerId && postOwnerId !== userId) {
       await supabase.from('community_notifications').insert({
-        user_id: postOwnerId, actor_id: userId, type: 'comment', post_id: postId,
+        user_id: postOwnerId, actor_id: userId, type: 'comment', post_id: postId, comment_id: data?.id,
       } as any);
     }
+    if (data?.id) await sendMentionNotifications(content, userId, postId, data.id, postOwnerId ? [postOwnerId] : []);
   };
 
   const deletePost = async (postId: string) => {
@@ -157,9 +205,9 @@ export function useCommunity(userId: string | undefined) {
     else fetchPosts();
   };
 
-  // Derived: filtered + sorted
+  // Derived: filter blocked + sort + search
   const visiblePosts = (() => {
-    let list = [...posts];
+    let list = posts.filter(p => !blockedIds.has(p.user_id));
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(p => p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q) || p.username?.toLowerCase().includes(q));
@@ -183,6 +231,14 @@ export function usePostDetail(postId: string, userId: string | undefined) {
   const [post, setPost] = useState<CommunityPost | null>(null);
   const [comments, setComments] = useState<CommunityComment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from('community_blocks' as any).select('blocked_id').eq('blocker_id', userId).then(({ data }) => {
+      setBlockedIds(new Set((data as any[] | null)?.map(b => b.blocked_id) || []));
+    });
+  }, [userId]);
 
   const fetchPost = useCallback(async () => {
     if (!userId || !postId) return;
@@ -198,7 +254,7 @@ export function usePostDetail(postId: string, userId: string | undefined) {
     const commentUserIds = [...new Set(rawComments?.map(c => c.user_id) || [])];
     const commentIds = rawComments?.map(c => c.id) || [];
     const [{ data: commentProfiles }, { data: commentLikes }] = await Promise.all([
-      supabase.from('profiles').select('user_id, username, avatar_url').in('user_id', commentUserIds),
+      supabase.from('profiles').select('user_id, username, avatar_url, banned').in('user_id', commentUserIds),
       commentIds.length
         ? supabase.from('community_comment_likes').select('comment_id, user_id').in('comment_id', commentIds)
         : Promise.resolve({ data: [] as any[] }),
@@ -223,15 +279,17 @@ export function usePostDetail(postId: string, userId: string | undefined) {
       user_liked: likes?.some(l => l.user_id === userId) || false,
     });
 
-    setComments((rawComments || []).map(c => ({
-      ...c,
-      username: profileMap.get(c.user_id)?.username || 'Anonymous',
-      avatar_url: (profileMap.get(c.user_id) as any)?.avatar_url || null,
-      like_count: commentLikeCount.get(c.id) || 0,
-      user_liked: commentUserLiked.get(c.id) || false,
-    })));
+    setComments((rawComments || [])
+      .filter(c => !blockedIds.has(c.user_id) && !(profileMap.get(c.user_id) as any)?.banned)
+      .map(c => ({
+        ...c,
+        username: profileMap.get(c.user_id)?.username || 'Anonymous',
+        avatar_url: (profileMap.get(c.user_id) as any)?.avatar_url || null,
+        like_count: commentLikeCount.get(c.id) || 0,
+        user_liked: commentUserLiked.get(c.id) || false,
+      })));
     setLoading(false);
-  }, [postId, userId]);
+  }, [postId, userId, blockedIds]);
 
   useEffect(() => { fetchPost(); }, [fetchPost]);
 

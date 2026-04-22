@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, Heart, MessageSquare } from 'lucide-react';
+import { Bell, Heart, MessageSquare, AtSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -42,12 +42,12 @@ export default function NotificationsBell({ userId }: Props) {
               <UserAvatar src={n.actor?.avatar_url} username={n.actor?.username} size="xs" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-foreground/90">
-                  <span className="font-display text-primary">{n.actor?.username || 'Someone'}</span>{' '}
-                  {n.type === 'like' ? 'liked your post' : 'commented on your post'}
+                  <span className="font-display text-primary">@{n.actor?.username || 'someone'}</span>{' '}
+                  {n.type === 'like' ? 'liked your post' : n.type === 'mention' ? 'mentioned you' : 'commented on your post'}
                 </p>
                 <p className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</p>
               </div>
-              {n.type === 'like' ? <Heart className="w-3 h-3 text-accent mt-1" /> : <MessageSquare className="w-3 h-3 text-primary mt-1" />}
+              {n.type === 'like' ? <Heart className="w-3 h-3 text-accent mt-1" /> : n.type === 'mention' ? <AtSign className="w-3 h-3 text-neon-purple mt-1" /> : <MessageSquare className="w-3 h-3 text-primary mt-1" />}
             </Link>
           ))}
         </div>
