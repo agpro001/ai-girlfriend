@@ -13,6 +13,8 @@ import Community from "./pages/Community";
 import CommunityPost from "./pages/CommunityPost";
 import RelationshipStats from "./pages/RelationshipStats";
 import NotFound from "./pages/NotFound";
+import UserProfile from "./pages/UserProfile";
+import AdminModeration from "./pages/AdminModeration";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -33,6 +35,8 @@ const App = () => (
           <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
           <Route path="/community/:postId" element={<ProtectedRoute><CommunityPost /></ProtectedRoute>} />
           <Route path="/stats/:companionId" element={<ProtectedRoute><RelationshipStats /></ProtectedRoute>} />
+          <Route path="/u/:username" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+          <Route path="/admin/moderation" element={<ProtectedRoute><AdminModeration /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

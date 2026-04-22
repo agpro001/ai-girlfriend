@@ -38,9 +38,9 @@ export default function Dashboard() {
 
       <header className="relative z-10 flex items-center justify-between p-4 border-b border-border/50">
         <h1 className="font-display text-lg tracking-wider">
-          <span className="text-neon-purple neon-glow-purple">AURA</span>
-          <span className="text-foreground">-</span>
-          <span className="text-neon-pink neon-glow-pink">LINK</span>
+          <span className="text-neon-purple neon-glow-purple">AI</span>
+          <span className="text-foreground"> </span>
+          <span className="text-neon-pink neon-glow-pink">GIRLFRIEND</span>
         </h1>
         <div className="flex items-center gap-3">
           <Link to="/profile">

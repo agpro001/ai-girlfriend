@@ -55,9 +55,9 @@ export default function Auth() {
       >
         <div className="text-center mb-8">
           <h1 className="font-display text-3xl font-bold tracking-wider">
-            <span className="text-neon-purple neon-glow-purple">AURA</span>
-            <span className="text-foreground">-</span>
-            <span className="text-neon-pink neon-glow-pink">LINK</span>
+            <span className="text-neon-purple neon-glow-purple">AI</span>
+            <span className="text-foreground"> </span>
+            <span className="text-neon-pink neon-glow-pink">GIRLFRIEND</span>
           </h1>
           <p className="text-muted-foreground text-sm mt-2">{isLogin ? 'Welcome back' : 'Create your account'}</p>
         </div>

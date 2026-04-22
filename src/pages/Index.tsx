@@ -39,9 +39,9 @@ export default function Index() {
           className="relative z-10"
         >
           <h1 className="font-display text-5xl md:text-7xl font-black tracking-wider mb-2">
-            <span className="text-neon-purple neon-glow-purple">AURA</span>
-            <span className="text-foreground">-</span>
-            <span className="text-neon-pink neon-glow-pink">LINK</span>
+            <span className="text-neon-purple neon-glow-purple">AI</span>
+            <span className="text-foreground"> </span>
+            <span className="text-neon-pink neon-glow-pink">GIRLFRIEND</span>
           </h1>
           <p className="text-muted-foreground text-lg md:text-xl max-w-md mx-auto mt-4 font-body">
             Beyond chatbots. Beyond simulation. A relationship that remembers, feels, and evolves.
@@ -49,7 +49,7 @@ export default function Index() {
           <div className="mt-8 flex gap-4 justify-center">
             <Link to="/auth">
               <Button size="lg" className="font-display text-sm tracking-widest bg-primary hover:bg-primary/80 neon-border">
-                ENTER AURA-LINK
+                ENTER AI GIRLFRIEND
               </Button>
             </Link>
           </div>
