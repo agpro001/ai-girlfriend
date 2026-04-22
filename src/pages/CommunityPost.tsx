@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ArrowLeft, Heart, Send, Loader2, Clock, Share2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Heart, Send, Loader2, Clock, Share2, Trash2, Flag, MoreVertical } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePostDetail, useCommunity } from '@/hooks/useCommunity';
 import { formatDistanceToNow } from 'date-fns';
 import BottomNav from '@/components/BottomNav';
 import FallingPetals from '@/components/FallingPetals';
 import UserAvatar from '@/components/UserAvatar';
+import MentionText from '@/components/MentionText';
+import MentionAutocomplete from '@/components/MentionAutocomplete';
+import ReportModal from '@/components/ReportModal';
 import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export default function CommunityPost() {
   const { postId } = useParams<{ postId: string }>();
@@ -19,6 +22,7 @@ export default function CommunityPost() {
   const { toggleLike, addComment } = useCommunity(user?.id);
   const [commentInput, setCommentInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{ type: 'post' | 'comment'; id: string } | null>(null);
   const { toast } = useToast();
 
   const handleComment = async () => {
@@ -56,24 +60,31 @@ export default function CommunityPost() {
         <Link to="/community"><Button variant="ghost" size="icon"><ArrowLeft className="w-4 h-4" /></Button></Link>
         <h1 className="font-display text-sm tracking-wider text-foreground truncate flex-1">{post.title}</h1>
         <Button variant="ghost" size="icon" onClick={share}><Share2 className="w-4 h-4" /></Button>
+        {user && user.id !== post.user_id && (
+          <Button variant="ghost" size="icon" onClick={() => setReportTarget({ type: 'post', id: post.id })}>
+            <Flag className="w-4 h-4" />
+          </Button>
+        )}
       </header>
 
       <div className="relative z-10 max-w-2xl mx-auto p-4 space-y-4">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <Link to={`/u/${post.username}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <UserAvatar src={post.avatar_url} username={post.username} size="md" />
               <div>
-                <div className="text-xs font-display text-primary tracking-wider">{post.username}</div>
+                <div className="text-xs font-display text-primary tracking-wider">@{post.username}</div>
                 <div className="text-[10px] text-muted-foreground flex items-center gap-1">
                   <Clock className="w-2.5 h-2.5" />
                   {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
           <h2 className="font-display text-lg text-foreground tracking-wider">{post.title}</h2>
-          <p className="text-sm text-foreground/80 whitespace-pre-wrap">{post.content}</p>
+          <p className="text-sm text-foreground/80 whitespace-pre-wrap">
+            <MentionText text={post.content} />
+          </p>
           {post.image_url && <img src={post.image_url} alt="" className="rounded-lg w-full max-h-96 object-cover" />}
           {post.tags?.length > 0 && (
             <div className="flex flex-wrap gap-1">
@@ -106,13 +117,31 @@ export default function CommunityPost() {
                 className="glass rounded-lg p-3"
               >
                 <div className="flex items-start gap-2">
-                  <UserAvatar src={c.avatar_url} username={c.username} size="xs" />
+                  <Link to={`/u/${c.username}`}>
+                    <UserAvatar src={c.avatar_url} username={c.username} size="xs" />
+                  </Link>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[10px] font-display text-primary tracking-wider">{c.username}</span>
-                      <span className="text-[9px] text-muted-foreground">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}</span>
+                    <div className="flex items-center justify-between mb-0.5 gap-2">
+                      <Link to={`/u/${c.username}`} className="text-[10px] font-display text-primary tracking-wider hover:underline">@{c.username}</Link>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[9px] text-muted-foreground">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}</span>
+                        {user && c.user_id !== user.id && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="text-muted-foreground hover:text-foreground"><MoreVertical className="w-3 h-3" /></button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="glass border-border/50">
+                              <DropdownMenuItem onClick={() => setReportTarget({ type: 'comment', id: c.id })}>
+                                <Flag className="w-3 h-3 mr-2" />Report
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-xs text-foreground/80 whitespace-pre-wrap">{c.content}</p>
+                    <p className="text-xs text-foreground/80 whitespace-pre-wrap">
+                      <MentionText text={c.content} />
+                    </p>
                     <div className="flex items-center gap-3 mt-1">
                       <button
                         onClick={() => toggleCommentLike(c.id, c.user_liked)}
@@ -138,12 +167,26 @@ export default function CommunityPost() {
 
       <div className="fixed bottom-16 left-0 right-0 z-30 p-3 glass border-t border-border/50">
         <form onSubmit={e => { e.preventDefault(); handleComment(); }} className="flex gap-2 max-w-2xl mx-auto">
-          <Input value={commentInput} onChange={e => setCommentInput(e.target.value)} placeholder="Write a comment..." maxLength={500} className="bg-muted border-border" />
+          <MentionAutocomplete
+            value={commentInput}
+            onChange={setCommentInput}
+            onSubmit={handleComment}
+            placeholder="Write a comment... (@ to mention)"
+          />
           <Button type="submit" size="icon" disabled={!commentInput.trim() || sending}>
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
         </form>
       </div>
+
+      {reportTarget && (
+        <ReportModal
+          open={!!reportTarget}
+          onOpenChange={(o) => !o && setReportTarget(null)}
+          targetType={reportTarget.type}
+          targetId={reportTarget.id}
+        />
+      )}
 
       <BottomNav />
     </div>
