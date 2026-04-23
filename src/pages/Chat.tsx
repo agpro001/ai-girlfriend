@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Send, Volume2, Image, Loader2, ArrowDown } from 'lucide-react';
+import { ArrowLeft, Send, Volume2, VolumeX, Image, Loader2, ArrowDown, Square } from 'lucide-react';
 import { getCompanion, getCompanionImage, getNeonTextClass, getMoodEmoji } from '@/lib/companions';
 import { useAuth } from '@/hooks/useAuth';
 import { useChat } from '@/hooks/useChat';
@@ -22,9 +22,11 @@ export default function Chat() {
   const [ageVerified, setAgeVerified] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, isLoading, isLoadingHistory, sendMessage, playVoice, generateImage, isPlayingVoice, isGeneratingImage, currentMood } = useChat(companionId || '', user?.id || '');
+  const { messages, isLoading, isLoadingHistory, sendMessage, playVoice, stopVoice, generateImage, isPlayingVoice, isGeneratingImage, currentMood, playingMessageId } = useChat(companionId || '', user?.id || '');
   const [showFlash, setShowFlash] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(false);
   const prevMood = useRef(currentMood);
+  const lastAutoPlayedId = useRef<string | null>(null);
 
   // Check age gate for NSFW companions
   useEffect(() => {
@@ -49,6 +51,17 @@ export default function Chat() {
     }
     prevMood.current = currentMood;
   }, [currentMood]);
+
+  // Auto-play newest assistant message when toggle is on
+  useEffect(() => {
+    if (!autoPlay || messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (last.role !== 'assistant' || !last.id) return;
+    if (isLoading) return; // wait until streaming finishes
+    if (lastAutoPlayedId.current === last.id) return;
+    lastAutoPlayedId.current = last.id;
+    playVoice(last.content, last.id, last.mood);
+  }, [messages, autoPlay, isLoading, playVoice]);
 
   const handleScroll = () => {
     if (!scrollRef.current) return;
@@ -149,6 +162,18 @@ export default function Chat() {
           </p>
         </div>
         <div className={`w-2 h-2 rounded-full ${moodColor[currentMood] || 'bg-muted/20'} animate-pulse`} />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => {
+            if (autoPlay) stopVoice();
+            setAutoPlay(v => !v);
+          }}
+          title={autoPlay ? 'Auto-play on' : 'Auto-play off'}
+        >
+          {autoPlay ? <Volume2 className="w-4 h-4 text-primary" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
+        </Button>
         <Link to={`/companion/${companion.id}`}>
           <Button variant="ghost" size="sm" className="text-xs font-display tracking-wider">PROFILE</Button>
         </Link>
@@ -192,11 +217,13 @@ export default function Chat() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
-                      onClick={() => playVoice(msg.content)}
-                      disabled={isPlayingVoice}
+                      className={`h-6 w-6 ${playingMessageId === msg.id ? 'text-primary animate-pulse' : ''}`}
+                      onClick={() => playVoice(msg.content, msg.id, msg.mood)}
+                      disabled={isPlayingVoice && playingMessageId !== msg.id}
                     >
-                      {isPlayingVoice ? <Loader2 className="w-3 h-3 animate-spin" /> : <Volume2 className="w-3 h-3" />}
+                      {playingMessageId === msg.id
+                        ? <Square className="w-3 h-3" />
+                        : (isPlayingVoice ? <Loader2 className="w-3 h-3 animate-spin" /> : <Volume2 className="w-3 h-3" />)}
                     </Button>
                     <Button
                       variant="ghost"

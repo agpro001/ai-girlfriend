@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getCompanion } from '@/lib/companions';
 import type { Message, MoodType } from '@/types/companion';
@@ -12,6 +12,9 @@ export function useChat(companionId: string, userId: string) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [currentMood, setCurrentMood] = useState<MoodType>('neutral');
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
+  const audioCacheRef = useRef<Map<string, string>>(new Map());
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   const companion = getCompanion(companionId);
 
@@ -297,32 +300,74 @@ export function useChat(companionId: string, userId: string) {
     }
   }, [companion, userId, companionId, conversationId, messages, toast]);
 
-  const playVoice = useCallback(async (text: string) => {
-    if (!companion) return;
-    setIsPlayingVoice(true);
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ text: text.slice(0, 500), voiceId: companion.voice_id }),
-        }
-      );
-      if (!response.ok) throw new Error('TTS failed');
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.onended = () => setIsPlayingVoice(false);
-      await audio.play();
-    } catch {
-      toast({ title: 'Voice unavailable', description: 'Set up ElevenLabs API key for voice messages.', variant: 'destructive' });
-      setIsPlayingVoice(false);
+  const stopVoice = useCallback(() => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
     }
-  }, [companion, toast]);
+    setIsPlayingVoice(false);
+    setPlayingMessageId(null);
+  }, []);
+
+  const playVoice = useCallback(async (text: string, messageId?: string, mood?: string) => {
+    if (!companion) return;
+    // Toggle stop if same message playing
+    if (messageId && playingMessageId === messageId) {
+      stopVoice();
+      return;
+    }
+    stopVoice();
+    setIsPlayingVoice(true);
+    setPlayingMessageId(messageId || null);
+
+    const cacheKey = messageId || text.slice(0, 100);
+    try {
+      let url = audioCacheRef.current.get(cacheKey);
+      if (!url) {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              text: text.slice(0, 500),
+              voiceId: companion.voice_id,
+              personality: companion.id,
+              mood: mood || currentMood,
+            }),
+          }
+        );
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({ error: 'TTS failed' }));
+          throw new Error(err.error || 'TTS failed');
+        }
+        const blob = await response.blob();
+        url = URL.createObjectURL(blob);
+        audioCacheRef.current.set(cacheKey, url);
+      }
+      const audio = new Audio(url);
+      currentAudioRef.current = audio;
+      audio.onended = () => {
+        setIsPlayingVoice(false);
+        setPlayingMessageId(null);
+        currentAudioRef.current = null;
+      };
+      audio.onerror = () => {
+        setIsPlayingVoice(false);
+        setPlayingMessageId(null);
+        currentAudioRef.current = null;
+      };
+      await audio.play();
+    } catch (e: any) {
+      toast({ title: 'Voice unavailable', description: e?.message || 'Voice playback failed.', variant: 'destructive' });
+      setIsPlayingVoice(false);
+      setPlayingMessageId(null);
+    }
+  }, [companion, toast, currentMood, playingMessageId, stopVoice]);
 
   const generateImage = useCallback(async (context: string) => {
     if (!companion || !conversationId) return;
@@ -351,5 +396,5 @@ export function useChat(companionId: string, userId: string) {
     }
   }, [companion, companionId, conversationId, currentMood, toast]);
 
-  return { messages, isLoading, isLoadingHistory, sendMessage, playVoice, generateImage, isPlayingVoice, isGeneratingImage, currentMood };
+  return { messages, isLoading, isLoadingHistory, sendMessage, playVoice, stopVoice, generateImage, isPlayingVoice, isGeneratingImage, currentMood, playingMessageId };
 }
