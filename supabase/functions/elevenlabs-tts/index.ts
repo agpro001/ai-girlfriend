@@ -104,8 +104,12 @@ serve(async (req) => {
       const t = await response.text();
       console.error("ElevenLabs error:", response.status, t);
       let msg = "TTS failed";
-      if (response.status === 401) msg = "Invalid ElevenLabs API key";
-      else if (response.status === 429) msg = "ElevenLabs quota exceeded";
+      try {
+        const parsed = JSON.parse(t);
+        msg = parsed?.detail?.message || parsed?.detail?.status || msg;
+      } catch { /* ignore */ }
+      if (response.status === 401) msg = `ElevenLabs: ${msg}`;
+      else if (response.status === 402) msg = `ElevenLabs paid plan required: ${msg}`;
       return new Response(JSON.stringify({ error: msg }), {
         status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
