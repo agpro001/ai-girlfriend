@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Send, Volume2, Image, Loader2, ArrowDown, Square } from 'lucide-react';
+import { ArrowLeft, Send, Image, Loader2, ArrowDown } from 'lucide-react';
 import { getCompanion, getCompanionImage, getNeonTextClass, getMoodEmoji } from '@/lib/companions';
 import { useAuth } from '@/hooks/useAuth';
 import { useChat } from '@/hooks/useChat';
@@ -22,7 +22,7 @@ export default function Chat() {
   const [ageVerified, setAgeVerified] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, isLoading, isLoadingHistory, sendMessage, playVoice, stopVoice, generateImage, isPlayingVoice, isGeneratingImage, currentMood, playingMessageId } = useChat(companionId || '', user?.id || '');
+  const { messages, isLoading, isLoadingHistory, sendMessage, generateImage, isGeneratingImage, currentMood } = useChat(companionId || '', user?.id || '');
   const [showFlash, setShowFlash] = useState(false);
   const prevMood = useRef(currentMood);
 
@@ -190,17 +190,6 @@ export default function Chat() {
                     {msg.mood && (
                       <span className="text-xs mr-1">{getMoodEmoji(msg.mood as MoodType)}</span>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`h-6 w-6 ${playingMessageId === msg.id ? 'text-primary animate-pulse' : ''}`}
-                      onClick={() => playVoice(msg.content, msg.id, msg.mood)}
-                      disabled={isPlayingVoice && playingMessageId !== msg.id}
-                    >
-                      {playingMessageId === msg.id
-                        ? <Square className="w-3 h-3" />
-                        : (isPlayingVoice ? <Loader2 className="w-3 h-3 animate-spin" /> : <Volume2 className="w-3 h-3" />)}
-                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"

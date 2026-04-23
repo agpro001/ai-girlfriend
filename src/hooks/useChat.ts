@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getCompanion } from '@/lib/companions';
 import type { Message, MoodType } from '@/types/companion';
@@ -7,14 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 export function useChat(companionId: string, userId: string) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [currentMood, setCurrentMood] = useState<MoodType>('neutral');
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
-  const audioCacheRef = useRef<Map<string, string>>(new Map());
-  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   const companion = getCompanion(companionId);
 
@@ -300,75 +296,6 @@ export function useChat(companionId: string, userId: string) {
     }
   }, [companion, userId, companionId, conversationId, messages, toast]);
 
-  const stopVoice = useCallback(() => {
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current.currentTime = 0;
-      currentAudioRef.current = null;
-    }
-    setIsPlayingVoice(false);
-    setPlayingMessageId(null);
-  }, []);
-
-  const playVoice = useCallback(async (text: string, messageId?: string, mood?: string) => {
-    if (!companion) return;
-    // Toggle stop if same message playing
-    if (messageId && playingMessageId === messageId) {
-      stopVoice();
-      return;
-    }
-    stopVoice();
-    setIsPlayingVoice(true);
-    setPlayingMessageId(messageId || null);
-
-    const cacheKey = messageId || text.slice(0, 100);
-    try {
-      let url = audioCacheRef.current.get(cacheKey);
-      if (!url) {
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({
-              text: text.slice(0, 500),
-              voiceId: companion.voice_id,
-              personality: companion.id,
-              mood: mood || currentMood,
-            }),
-          }
-        );
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({ error: 'TTS failed' }));
-          throw new Error(err.error || 'TTS failed');
-        }
-        const blob = await response.blob();
-        url = URL.createObjectURL(blob);
-        audioCacheRef.current.set(cacheKey, url);
-      }
-      const audio = new Audio(url);
-      currentAudioRef.current = audio;
-      audio.onended = () => {
-        setIsPlayingVoice(false);
-        setPlayingMessageId(null);
-        currentAudioRef.current = null;
-      };
-      audio.onerror = () => {
-        setIsPlayingVoice(false);
-        setPlayingMessageId(null);
-        currentAudioRef.current = null;
-      };
-      await audio.play();
-    } catch (e: any) {
-      toast({ title: 'Voice unavailable', description: e?.message || 'Voice playback failed.', variant: 'destructive' });
-      setIsPlayingVoice(false);
-      setPlayingMessageId(null);
-    }
-  }, [companion, toast, currentMood, playingMessageId, stopVoice]);
-
   const generateImage = useCallback(async (context: string) => {
     if (!companion || !conversationId) return;
     setIsGeneratingImage(true);
@@ -396,5 +323,5 @@ export function useChat(companionId: string, userId: string) {
     }
   }, [companion, companionId, conversationId, currentMood, toast]);
 
-  return { messages, isLoading, isLoadingHistory, sendMessage, playVoice, stopVoice, generateImage, isPlayingVoice, isGeneratingImage, currentMood, playingMessageId };
+  return { messages, isLoading, isLoadingHistory, sendMessage, generateImage, isGeneratingImage, currentMood };
 }
