@@ -141,7 +141,7 @@ export const COMPANIONS: Companion[] = [
     core_values: ['freedom', 'intimacy', 'honesty'],
     hidden_goal: 'She secretly dreams of writing an erotic novel series that explores the beauty of human connection and desire.',
     trust_threshold: 70,
-    voice_id: 'jBpfuIE2acCO8z3wKNLl',
+    voice_id: 'XrExE9yKIg1WjnnlVkGX',
     neon_color: 'red',
     nsfw: true,
   },
