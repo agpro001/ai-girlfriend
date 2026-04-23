@@ -150,18 +150,6 @@ export default function Chat() {
           </p>
         </div>
         <div className={`w-2 h-2 rounded-full ${moodColor[currentMood] || 'bg-muted/20'} animate-pulse`} />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => {
-            if (autoPlay) stopVoice();
-            setAutoPlay(v => !v);
-          }}
-          title={autoPlay ? 'Auto-play on' : 'Auto-play off'}
-        >
-          {autoPlay ? <Volume2 className="w-4 h-4 text-primary" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
-        </Button>
         <Link to={`/companion/${companion.id}`}>
           <Button variant="ghost" size="sm" className="text-xs font-display tracking-wider">PROFILE</Button>
         </Link>
