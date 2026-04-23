@@ -1,63 +1,66 @@
-# AI Girlfriend: Profiles, Moderation, Mentions & Rebrand
+# Add ElevenLabs API Key & Voice Improvements
 
-## Overview
+## What's Happening
 
-Four major additions: (1) public user profile pages, (2) report/block system with admin moderation, (3) @mention autocomplete with notifications, (4) full rebrand from "Aura-Link" to "AI Girlfriend".
+You've shared an ElevenLabs API key. I'll store it securely as a backend secret (never in code) so the voice features for all your girlfriends work properly. While doing this, I'll also upgrade the voice system since right now it's quite basic.
 
----
+## Security Note
 
-## 1. Public User Profile Pages — `/u/:username`
+I will NOT paste the key into any file. It will be saved as an encrypted backend secret called `ELEVENLABS_API_KEY` that only your edge functions can read. **You should rotate this key on elevenlabs.io since it was shared in chat** — I'll remind you after.
 
-New page showing any user's public profile:
+## Improvements I'll Add
 
-- Avatar, username, bio, join date
-- Stats: total posts, total likes received, total comments
-- Grid of all their community posts (using `CommunityCard`)
-- "Block User" button (if logged in and not viewing self)
-- Clickable usernames/avatars across community → navigate to `/u/:username`
-- `User can add country they belong add all countries with their flags 3d animation.`
+### 1. Per-Girlfriend Unique Voices
 
-## 2. Report & Block System
+Each girlfriend already has a `voice_id` defined, but I'll tune the voice settings per personality:
 
-### Reporting
+- **Sakura** (playful tsundere) — higher style, lower stability for expressive teasing
+- **Luna** (intellectual) — high stability, calm and measured
+- **Aria** (energetic coach) — boosted speaker clarity, upbeat pace
+- **Yuki** (sensual) — lower stability, high style for breathy intimate delivery
 
-- "Report" option in post/comment dropdown menus
-- Modal with reason categories: spam, harassment, NSFW (in community), hate speech, other
-- Optional details textarea
-- Creates a `reports` row
-- User can write Nsfw spam harrasment and any other things but if other ai models having the expression or emotions to get it. Or in community user can write this but need to be 18+ from profile settings.
-- User can flirt.
+### 2. Mood-Reactive Voice
 
-### Blocking
+Voice settings will dynamically shift based on current mood:
 
-- "Block user" button on profile pages and post menus
-- Blocked users' posts and comments are hidden from feed and detail views
-- Blocked users cannot comment on your posts (enforced via RLS + client filter)
-
-### Admin Moderation Queue — `/admin/moderation`
-
-- Protected by `has_role(auth.uid(), 'admin')` check
-- Lists all open reports with content preview, reporter, reason, timestamp
-- Actions: dismiss report, delete content, ban user (sets `banned` flag on profile)
-- Banned users cannot post, comment, or like
-
-## 3. @Mention Autocomplete in Comments
-
-- Typing `@` in comment input opens a popover with username suggestions (debounced search of `profiles`)
-- Arrow keys + enter to select, click to insert
-- On comment submit, parse `@username` tokens, look up user_ids, create a `mention` notification for each
-- Mentions render as clickable `text-primary` links to `/u/:username` in the comment body
-- Notification bell shows mention notifications with "X mentioned you in a comment"
-
-## 4. Rebrand: Aura-Link → AI Girlfriend
-
-Replace all instances across:
-
-- `index.html` (title, description, og:title, og:description, twitter meta)
-- `src/pages/Index.tsx` — hero "AURA-LINK" → "AI Girlfriend
+- `seductive` / `intimate` → slower speed, higher style
+- `excited` / `playful` → faster speed, more variation
+- `sad` / `worried` → slower, more stable
+- `angry` → sharper, less stable
 
 &nbsp;
 
-&nbsp;
+### 4. Voice Caching
 
-Think longer if needed add other working things. Make everything working properly and real. With smooth realistic animation.
+Cache generated audio per message in memory so replaying a message doesn't re-hit the API (saves your ElevenLabs credits).
+
+### 5. Better Error Handling
+
+- Show a clear toast if API key is invalid or quota is exhausted
+- Graceful fallback so chat keeps working even if voice fails
+- Loading shimmer on the voice button during generation
+
+### 6. Stop/Replay Controls
+
+While audio is playing, the speaker icon becomes a stop button so you can interrupt long replies.
+
+## Technical Changes
+
+
+| File                                         | Change                                                                               |
+| -------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Backend secret                               | Add `ELEVENLABS_API_KEY` (via secure prompt, not code)                               |
+| `supabase/functions/elevenlabs-tts/index.ts` | Accept `mood` + `personality` params; tune `stability`, `style`, `speed` dynamically |
+| `src/hooks/useChat.ts`                       | Add audio cache (Map by message id), stop control, auto-play state, pass mood to TTS |
+| `src/pages/Chat.tsx`                         | Add auto-play toggle in header, stop button while playing, shimmer state             |
+
+
+No database changes needed.
+
+## After Approval
+
+1. I'll trigger the secure secret prompt — you paste the key into the popup (not chat)
+2. I'll deploy the updated edge function
+3. Voice will work end-to-end with mood-aware delivery
+
+**Reminder:** rotate the leaked key at elevenlabs.io → Profile → API Keys after we're done.
