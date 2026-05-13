@@ -15,6 +15,10 @@ import RelationshipStats from "./pages/RelationshipStats";
 import NotFound from "./pages/NotFound";
 import UserProfile from "./pages/UserProfile";
 import AdminModeration from "./pages/AdminModeration";
+import AdminUsers from "./pages/AdminUsers";
+import AdminUserDetail from "./pages/AdminUserDetail";
+import AdminConversation from "./pages/AdminConversation";
+import AdminStats from "./pages/AdminStats";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -37,6 +41,10 @@ const App = () => (
           <Route path="/stats/:companionId" element={<ProtectedRoute><RelationshipStats /></ProtectedRoute>} />
           <Route path="/u/:username" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
           <Route path="/admin/moderation" element={<ProtectedRoute><AdminModeration /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
+          <Route path="/admin/users/:userId" element={<ProtectedRoute><AdminUserDetail /></ProtectedRoute>} />
+          <Route path="/admin/conversations/:conversationId" element={<ProtectedRoute><AdminConversation /></ProtectedRoute>} />
+          <Route path="/admin/stats" element={<ProtectedRoute><AdminStats /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
