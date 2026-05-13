@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, ImageIcon, ShieldCheck } from 'lucide-react';
+import { Home, Users, ImageIcon, ShieldCheck, BarChart3, UserCog } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -8,12 +8,18 @@ export default function BottomNav() {
   const { user } = useAuth();
   const { isAdmin } = useUserRole(user?.id);
 
-  const navItems = [
-    { to: '/dashboard', icon: Home, label: 'Home', match: '/dashboard' },
-    { to: '/community', icon: Users, label: 'Community', match: '/community' },
-    { to: '/gallery', icon: ImageIcon, label: 'Gallery', match: '/gallery' },
-    ...(isAdmin ? [{ to: '/admin/moderation', icon: ShieldCheck, label: 'Mod', match: '/admin' }] : []),
-  ];
+  const navItems = isAdmin
+    ? [
+        { to: '/dashboard', icon: Home, label: 'Home', match: '/dashboard' },
+        { to: '/admin/users', icon: UserCog, label: 'Users', match: '/admin/users' },
+        { to: '/admin/stats', icon: BarChart3, label: 'Stats', match: '/admin/stats' },
+        { to: '/admin/moderation', icon: ShieldCheck, label: 'Mod', match: '/admin/moderation' },
+      ]
+    : [
+        { to: '/dashboard', icon: Home, label: 'Home', match: '/dashboard' },
+        { to: '/community', icon: Users, label: 'Community', match: '/community' },
+        { to: '/gallery', icon: ImageIcon, label: 'Gallery', match: '/gallery' },
+      ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50">

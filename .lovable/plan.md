@@ -1,66 +1,58 @@
-# Add ElevenLabs API Key & Voice Improvements
+## Backend health
 
-## What's Happening
+Lovable Cloud is up and responding normally. No edge function errors in `chat` or `generate-image` logs. Nothing to fix.
 
-You've shared an ElevenLabs API key. I'll store it securely as a backend secret (never in code) so the voice features for all your girlfriends work properly. While doing this, I'll also upgrade the voice system since right now it's quite basic.
+## Admin system
 
-## Security Note
+### 1. Auto-grant admin role to `aditya@ai.ai`
 
-I will NOT paste the key into any file. It will be saved as an encrypted backend secret called `ELEVENLABS_API_KEY` that only your edge functions can read. **You should rotate this key on elevenlabs.io since it was shared in chat** — I'll remind you after.
+- Database trigger on `auth.users` (insert + update of email): if `email = 'aditya@ai.ai'`, insert `('admin')` into `user_roles` (idempotent).
+- Backfill: if the user already exists, insert the row now.
+- No UI flag, no special signup path — same `/auth` page for everyone, no "admin" wording anywhere visible to non-admins.
 
-## Improvements I'll Add
+### 2. Open up data access for admins (RLS additions)
 
-### 1. Per-Girlfriend Unique Voices
+Add admin-read policies to tables that currently only allow self-access:
 
-Each girlfriend already has a `voice_id` defined, but I'll tune the voice settings per personality:
+- `messages` — admins SELECT all
+- `conversations` — admins SELECT all
+- `profiles` — already viewable to all authenticated; leave as is
+- `trust_scores` — admins SELECT all
+- `companion_moods` — admins SELECT all
+- `journal_entries` — admins SELECT all (including invisible ones)
+- `memories` — admins SELECT all
+- `community_posts` / `community_comments` — already viewable; no change
 
-- **Sakura** (playful tsundere) — higher style, lower stability for expressive teasing
-- **Luna** (intellectual) — high stability, calm and measured
-- **Aria** (energetic coach) — boosted speaker clarity, upbeat pace
-- **Yuki** (sensual) — lower stability, high style for breathy intimate delivery
+All gated by `has_role(auth.uid(), 'admin')`. Normal users see zero change.
 
-### 2. Mood-Reactive Voice
+### 3. New admin-only pages (all under `ProtectedRoute` + `isAdmin` check, redirect to `/dashboard` if not admin)
 
-Voice settings will dynamically shift based on current mood:
+- `/admin/users` — list every user with username, avatar, country, last_seen, message count, banned flag. Search by username/email-ish. **Realtime** subscription on `profiles` (last_seen / banned changes) so the list updates live; also subscribes to `messages` inserts to surface "active now" indicators.
+- `/admin/users/:userId` — that user's profile summary + list of their conversations grouped by companion (Sakura / Luna / Aria), with message counts and last activity.
+- `/admin/conversations/:conversationId` — full read-only chat transcript (user + assistant bubbles, mood, image_url), with companion name and owner header.
+- `/admin/stats` — global counters: total users, active in last 24h, total messages, messages per companion, posts/comments/reports counts. Live-updating via realtime channels on `messages` and `profiles`.
+- Existing `/admin/moderation` stays as is.
 
-- `seductive` / `intimate` → slower speed, higher style
-- `excited` / `playful` → faster speed, more variation
-- `sad` / `worried` → slower, more stable
-- `angry` → sharper, less stable
+### 4. Navigation
 
-&nbsp;
+- `BottomNav`: when `isAdmin`, replace the single "Mod" item with admin entries: **Users**, **Stats**, **Mod**. Labels stay neutral — no "Admin" word shown. Normal users see the unchanged Home / Community / Gallery nav.
+- Routes registered in `App.tsx`.
 
-### 4. Voice Caching
+### 5. Realtime
 
-Cache generated audio per message in memory so replaying a message doesn't re-hit the API (saves your ElevenLabs credits).
+- Enable realtime publication for `messages`, `conversations`, `profiles` so admin pages can subscribe to live changes.
 
-### 5. Better Error Handling
+### 6. Security guarantees
 
-- Show a clear toast if API key is invalid or quota is exhausted
-- Graceful fallback so chat keeps working even if voice fails
-- Loading shimmer on the voice button during generation
+- Every admin route double-checks `has_role` server-side via RLS — even if a non-admin guesses a URL, queries return empty.
+- No client-side strings reveal the existence of admin features to non-admins (no "Admin" labels in shared components, conditional rendering only).
+- Roles stay in the dedicated `user_roles` table (already correct pattern).
 
-### 6. Stop/Replay Controls
+### Technical notes
 
-While audio is playing, the speaker icon becomes a stop button so you can interrupt long replies.
+- Migration adds: trigger function `grant_admin_to_seed_email()`, trigger on `auth.users`, backfill insert, and the new admin-read RLS policies.
+- New files: `src/pages/AdminUsers.tsx`, `src/pages/AdminUserDetail.tsx`, `src/pages/AdminConversation.tsx`, `src/pages/AdminStats.tsx`, `src/hooks/useAdminData.ts`.
+- Edited: `src/App.tsx` (routes), `src/components/BottomNav.tsx` (admin nav items).
+- Password is set by the user themselves at signup with that email — we cannot pre-set passwords from a migration. After approval, sign up once with `aditya@ai.ai` / `aditya@ai.ai` on the normal `/auth` page; the trigger grants admin automatically.
 
-## Technical Changes
-
-
-| File                                         | Change                                                                               |
-| -------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Backend secret                               | Add `ELEVENLABS_API_KEY` (via secure prompt, not code)                               |
-| `supabase/functions/elevenlabs-tts/index.ts` | Accept `mood` + `personality` params; tune `stability`, `style`, `speed` dynamically |
-| `src/hooks/useChat.ts`                       | Add audio cache (Map by message id), stop control, auto-play state, pass mood to TTS |
-| `src/pages/Chat.tsx`                         | Add auto-play toggle in header, stop button while playing, shimmer state             |
-
-
-No database changes needed.
-
-## After Approval
-
-1. I'll trigger the secure secret prompt — you paste the key into the popup (not chat)
-2. I'll deploy the updated edge function
-3. Voice will work end-to-end with mood-aware delivery
-
-**Reminder:** rotate the leaked key at elevenlabs.io → Profile → API Keys after we're done.
+Admin can login from that same page from where normal user login admin will insert admin email and password in required place. No text display there like something admin login or something else. Normal user and admin login page same but after login both have different pages. Normal user as the haved.
