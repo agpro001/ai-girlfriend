@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, ImageIcon, ShieldCheck, BarChart3, UserCog } from 'lucide-react';
+import { Home, Users, ImageIcon, ShieldCheck, BarChart3, UserCog, Sparkles, Layers } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -12,6 +12,8 @@ export default function BottomNav() {
     ? [
         { to: '/dashboard', icon: Home, label: 'Home', match: '/dashboard' },
         { to: '/admin/users', icon: UserCog, label: 'Users', match: '/admin/users' },
+        { to: '/admin/models', icon: Sparkles, label: 'Models', match: '/admin/models' },
+        { to: '/admin/wallpapers', icon: Layers, label: 'Walls', match: '/admin/wallpapers' },
         { to: '/admin/stats', icon: BarChart3, label: 'Stats', match: '/admin/stats' },
         { to: '/admin/moderation', icon: ShieldCheck, label: 'Mod', match: '/admin/moderation' },
       ]
