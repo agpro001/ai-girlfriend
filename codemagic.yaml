@@ -1,0 +1,25 @@
+# NOTE: This file was added per Codemagic React Native quick start instructions.
+# Replace the placeholders below with the exact configuration from the Codemagic React Native guide
+# for your project (Android/iOS, signing, environment variables, etc.).
+
+workflows:
+  first-workflow:
+    name: Add first workflow
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      vars:
+        NODE_VERSION: "18"
+      node: $NODE_VERSION
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+      - name: Run tests
+        script: |
+          npm test --if-present
+    artifacts:
+      - build/**
+      - "**/*.apk"
+      - "**/*.aab"
+      - "**/*.ipa"
