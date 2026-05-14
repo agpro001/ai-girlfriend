@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, MessageSquare, Heart, Brain } from 'lucide-react';
+import { ArrowLeft, Loader2, MessageSquare, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { getCompanion, getCompanionImage } from '@/lib/companions';
+import { getCompanion, getCompanionImage, getMoodEmoji } from '@/lib/companions';
+import { COMPANIONS, type MoodType } from '@/types/companion';
 import BottomNav from '@/components/BottomNav';
+
+const MOODS: MoodType[] = ['happy','playful','romantic','sad','angry','worried','neutral','excited','jealous','seductive','passionate','intimate'];
 
 interface Convo { id: string; companion_id: string; updated_at: string; message_count: number; }
 interface Profile { username: string | null; avatar_url: string | null; country: string | null; bio: string | null; banned: boolean; last_seen: string | null; }
