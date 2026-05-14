@@ -98,6 +98,27 @@ export default function AdminUserDetail() {
               </div>
             </div>
 
+            <h3 className="font-display text-xs tracking-wider text-muted-foreground pt-2">LIVE MOOD CONTROL</h3>
+            <div className="space-y-2">
+              {COMPANIONS.map(c => (
+                <div key={c.id} className="glass rounded-xl p-3 border border-border/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <img src={getCompanionImage(c.id)} alt="" className="w-7 h-7 rounded object-cover" />
+                    <span className="text-sm text-foreground flex-1">{c.name}</span>
+                    <span className="text-xs text-muted-foreground">{getMoodEmoji((moods[c.id] || 'neutral') as MoodType)} {moods[c.id] || 'neutral'}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {MOODS.map(m => (
+                      <button key={m} onClick={() => setMood(c.id, m)}
+                        className={`text-[10px] px-2 py-1 rounded ${moods[c.id] === m ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}>
+                        {getMoodEmoji(m)} {m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <h3 className="font-display text-xs tracking-wider text-muted-foreground pt-2">CONVERSATIONS</h3>
             {convos.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">No conversations yet.</p>
