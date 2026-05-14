@@ -249,6 +249,63 @@ export type Database = {
         }
         Relationships: []
       }
+      companion_overrides: {
+        Row: {
+          agreeableness: number | null
+          ambition: number | null
+          companion_id: string
+          description: string | null
+          empathy: number | null
+          enabled: boolean
+          hidden_goal: string | null
+          id: string
+          name: string | null
+          neon_color: string | null
+          neuroticism: number | null
+          sarcasm: number | null
+          tagline: string | null
+          trust_threshold: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          agreeableness?: number | null
+          ambition?: number | null
+          companion_id: string
+          description?: string | null
+          empathy?: number | null
+          enabled?: boolean
+          hidden_goal?: string | null
+          id?: string
+          name?: string | null
+          neon_color?: string | null
+          neuroticism?: number | null
+          sarcasm?: number | null
+          tagline?: string | null
+          trust_threshold?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          agreeableness?: number | null
+          ambition?: number | null
+          companion_id?: string
+          description?: string | null
+          empathy?: number | null
+          enabled?: boolean
+          hidden_goal?: string | null
+          id?: string
+          name?: string | null
+          neon_color?: string | null
+          neuroticism?: number | null
+          sarcasm?: number | null
+          tagline?: string | null
+          trust_threshold?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           companion_id: string
@@ -460,6 +517,112 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_wallpaper_settings: {
+        Row: {
+          id: string
+          is_global: boolean
+          target_user_id: string | null
+          updated_at: string
+          updated_by: string | null
+          wallpaper_id: string | null
+        }
+        Insert: {
+          id?: string
+          is_global?: boolean
+          target_user_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          wallpaper_id?: string | null
+        }
+        Update: {
+          id?: string
+          is_global?: boolean
+          target_user_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          wallpaper_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_wallpaper_settings_wallpaper_id_fkey"
+            columns: ["wallpaper_id"]
+            isOneToOne: false
+            referencedRelation: "wallpapers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallpaper_collections: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      wallpapers: {
+        Row: {
+          accent_color: string | null
+          collection_id: string | null
+          created_at: string
+          gradient: string | null
+          id: string
+          image_url: string | null
+          kind: string
+          name: string
+          preset: string | null
+          primary_color: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          collection_id?: string | null
+          created_at?: string
+          gradient?: string | null
+          id?: string
+          image_url?: string | null
+          kind?: string
+          name: string
+          preset?: string | null
+          primary_color?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          collection_id?: string | null
+          created_at?: string
+          gradient?: string | null
+          id?: string
+          image_url?: string | null
+          kind?: string
+          name?: string
+          preset?: string | null
+          primary_color?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallpapers_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "wallpaper_collections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
