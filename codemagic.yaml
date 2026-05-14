@@ -9,7 +9,7 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       vars:
-        NODE_VERSION: "22"
+        NODE_VERSION: "18"
       node: $NODE_VERSION
     scripts:
       - name: Install dependencies
