@@ -23,27 +23,50 @@ export default function AdminUserDetail() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [convos, setConvos] = useState<Convo[]>([]);
   const [trust, setTrust] = useState<Record<string, number>>({});
+  const [moods, setMoods] = useState<Record<string, MoodType>>({});
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const loadAll = async () => {
+    if (!userId) return;
+    const [{ data: prof }, { data: cs }, { data: ts }, { data: msgs }, { data: ms }] = await Promise.all([
+      supabase.from('profiles').select('username, avatar_url, country, bio, banned, last_seen').eq('user_id', userId).maybeSingle(),
+      supabase.from('conversations').select('id, companion_id, updated_at').eq('user_id', userId).order('updated_at', { ascending: false }),
+      supabase.from('trust_scores').select('companion_id, score').eq('user_id', userId),
+      supabase.from('messages').select('conversation_id').eq('user_id', userId),
+      supabase.from('companion_moods').select('companion_id, mood').eq('user_id', userId),
+    ]);
+    const counts = new Map<string, number>();
+    (msgs || []).forEach((m: any) => counts.set(m.conversation_id, (counts.get(m.conversation_id) || 0) + 1));
+    setProfile(prof as any);
+    setConvos((cs || []).map((c: any) => ({ ...c, message_count: counts.get(c.id) || 0 })));
+    const tmap: Record<string, number> = {};
+    (ts || []).forEach((t: any) => { tmap[t.companion_id] = t.score; });
+    setTrust(tmap);
+    const mmap: Record<string, MoodType> = {};
+    (ms || []).forEach((m: any) => { mmap[m.companion_id] = m.mood as MoodType; });
+    setMoods(mmap);
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (!isAdmin || !userId) return;
-    (async () => {
-      const [{ data: prof }, { data: cs }, { data: ts }, { data: msgs }] = await Promise.all([
-        supabase.from('profiles').select('username, avatar_url, country, bio, banned, last_seen').eq('user_id', userId).maybeSingle(),
-        supabase.from('conversations').select('id, companion_id, updated_at').eq('user_id', userId).order('updated_at', { ascending: false }),
-        supabase.from('trust_scores').select('companion_id, score').eq('user_id', userId),
-        supabase.from('messages').select('conversation_id').eq('user_id', userId),
-      ]);
-      const counts = new Map<string, number>();
-      (msgs || []).forEach((m: any) => counts.set(m.conversation_id, (counts.get(m.conversation_id) || 0) + 1));
-      setProfile(prof as any);
-      setConvos((cs || []).map((c: any) => ({ ...c, message_count: counts.get(c.id) || 0 })));
-      const tmap: Record<string, number> = {};
-      (ts || []).forEach((t: any) => { tmap[t.companion_id] = t.score; });
-      setTrust(tmap);
-      setLoading(false);
-    })();
+    loadAll();
   }, [isAdmin, userId]);
+
+  const setMood = async (companionId: string, mood: MoodType) => {
+    if (!userId) return;
+    const { data: existing } = await supabase.from('companion_moods')
+      .select('id').eq('user_id', userId).eq('companion_id', companionId).maybeSingle();
+    if ((existing as any)?.id) {
+      await supabase.from('companion_moods').update({ mood, updated_at: new Date().toISOString() }).eq('id', (existing as any).id);
+    } else {
+      await supabase.from('companion_moods').insert({ user_id: userId, companion_id: companionId, mood });
+    }
+    setMoods(prev => ({ ...prev, [companionId]: mood }));
+    toast({ title: 'Mood updated', description: `${companionId}: ${mood}` });
+  };
+
 
   if (roleLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
