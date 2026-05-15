@@ -9,12 +9,13 @@ export type WallpaperData = {
   image_url?: string | null;
 };
 
-export default function LiveWallpaper({ wp }: { wp: WallpaperData | null }) {
+export default function LiveWallpaper({ wp, contained = false }: { wp: WallpaperData | null; contained?: boolean }) {
   if (!wp) return null;
+  const pos = contained ? 'absolute inset-0' : 'fixed inset-0 -z-10';
   if (wp.kind === 'static') {
     return (
       <div
-        className="fixed inset-0 -z-10 pointer-events-none"
+        className={`${pos} pointer-events-none`}
         style={{
           background: wp.image_url ? `url(${wp.image_url}) center/cover` : (wp.gradient || undefined),
         }}

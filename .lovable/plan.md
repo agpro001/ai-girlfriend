@@ -1,59 +1,51 @@
-## Findings
+## Goals
 
-- The hosted backend is healthy.
-- `aditya@ai.ai` exists and already has the admin role, but its email is not verified, so password login can show as invalid.
-- `adityagupta1234.in@gmail.com` exists, is verified, and has logged in before, but does not currently have the admin role.
-- The admin auto-grant trigger is missing in the live database even though the function exists, so future admin assignment is not reliable until fixed.
+1. Session must persist across browser refresh — no forced re-login until the user clicks Logout.
+2. All admin features fully functional with no errors.
+
+## Root causes found
+
+**A. Refresh logout bug (`src/hooks/useAuth.tsx`)**
+The hook calls `setLoading(false)` from BOTH `onAuthStateChange` and `getSession()`. Supabase fires an `INITIAL_SESSION` event very early — sometimes with `session = null` for a tick before storage is rehydrated. `loading` flips to `false` while `user` is still `null`, so `ProtectedRoute` immediately redirects to `/auth`. Then `getSession()` resolves with the real user, but the redirect already happened.
+
+**B. Admin Wallpapers thumbnails broken (`src/components/LiveWallpaper.tsx` + `src/pages/AdminWallpapers.tsx`)**
+`LiveWallpaper` always renders with `fixed inset-0 -z-10`, meaning when used as a grid-cell preview it escapes its container and all 9 wallpapers stack on the page background. Previews appear empty.
+
+**C. No active wallpaper exists yet**
+`user_wallpaper_settings` is empty in the DB, so new users see no background. Need a sensible default global wallpaper seeded so the system feels alive out of the box.
+
+**D. Admin nav lacks Moderation visibility verification**
+Routes are wired correctly; no fix needed beyond confirming.
 
 ## Plan
 
-1. **Fix the admin account setup**
-   - Grant admin access to `adityagupta1234.in@gmail.com`.
-   - Update the auto-admin grant function to support `adityagupta1234.in@gmail.com` going forward.
-   - Recreate the missing auth trigger so the role is applied reliably on signup/email updates.
-   - Keep roles only in `user_roles`, not profiles or client storage.
+### 1. Fix auth persistence
 
-2. **Harden the hidden admin routing**
-   - Keep normal users on the same login page and normal app pages.
-   - Ensure guessed admin URLs redirect normal users and still rely on backend role checks.
-   - Add the new admin pages only to the admin nav after a verified admin role is loaded.
+Rewrite `useAuth` so:
 
-3. **Add editable companion/model controls**
-   - Create a backend table for companion overrides with fields like name, tagline, description, personality values, hidden goal, trust threshold, neon color, enabled status, and updated timestamp.
-   - Admins can edit these values; normal users can only read the active values needed to render the app.
-   - Merge these overrides into the existing `COMPANIONS` data so dashboard, chat, profile, stats, and prompts use updated model names/details.
-   - Enable realtime updates so companion edits appear live without refresh.
+- `onAuthStateChange` is set up first, but only updates `user` (it does NOT toggle `loading`).
+- `getSession()` is the single source that sets `loading = false` once storage rehydration completes.
+- Result: `ProtectedRoute` waits for the real session before deciding.
 
-4. **Add real-time mood control for all users**
-   - Add admin policies allowing admins to update any user's companion mood.
-   - Add controls on user detail/conversation admin pages to set mood and intensity per companion/user.
-   - Normal users still only see their own moods.
-   - Use realtime subscriptions so the user dashboard/chat reflects admin mood changes live.
+### 2. Make `LiveWallpaper` container-aware
 
-5. **Add wallpaper and live wallpaper collections**
-   - Create `wallpaper_collections`, `wallpapers`, and `user_wallpaper_settings` tables.
-   - Include seeded cyberpunk/neon static wallpapers and live wallpaper presets using safe CSS/animation configs, not untrusted code.
-   - Admins can create, edit, activate, and assign wallpapers globally or per user.
-   - Normal users can read only active wallpaper data needed by the app.
+Add a `contained?: boolean` prop. When true, swap `fixed inset-0 -z-10` → `absolute inset-0`. Update `AdminWallpapers` previews to pass `contained`.
 
-6. **Build admin management screens**
-   - Add a neutral admin-only “Models” page to edit companion settings.
-   - Add a neutral admin-only “Walls” page to manage wallpaper collections and live presets.
-   - Extend user detail with mood/wallpaper controls for that selected user.
-   - Keep labels neutral in admin nav, without exposing admin wording to normal users.
+### 3. Seed a default global wallpaper
 
-7. **Apply wallpapers in the app**
-   - Add a shared wallpaper provider/hook that loads the active global or user-specific wallpaper.
-   - Apply it consistently to dashboard/chat/community/gallery/admin layouts without breaking the current dark neon style.
-   - Support realtime changes for global and per-user wallpaper updates.
+Insert one row into `user_wallpaper_settings` with `is_global = true` pointing at "Aurora Flow" so all users get a live background immediately. Admins can change it from the Walls page.
 
-8. **Validate**
-   - Check admin role queries for both emails.
-   - Run database linter after migrations.
-   - Check TypeScript/test output through the normal harness.
-   - Verify no ElevenLabs voice references remain active and no recent edge errors are present.
+### 4. Verify and validate
+
+- Run the db linter and typecheck output from the dev build.
+- Manually re-check admin pages render: Users, User Detail (mood control), Conversation read-only, Stats, Models save+broadcast, Walls thumbnails + set-as-global, Moderation queue.
+- Confirm normal users see no admin nav items and no admin labels anywhere on shared pages.
 
 ## Technical notes
 
-- Passwords cannot be set or changed directly from a database migration. Since `adityagupta1234.in@gmail.com` already exists and is verified, the fix is to grant that existing account admin access. If its password is not currently `Abcd1234`, use the app’s normal password reset flow or sign in with the existing password.
-- The new admin features require database migrations first, then frontend changes after the generated database types update.
+- `useAuth` change is the standard "set listener first, then `getSession`, only toggle `loading` after `getSession` resolves" pattern.
+- `LiveWallpaper` switch is purely a className branch — no API change to `AppWallpaper`.
+- Default global wallpaper insert is one SQL row; idempotent guard via `WHERE NOT EXISTS`.
+- No new tables, no new RLS policies, no schema changes.
+
+All features must working properly and really no simulation all real features working correctly.Smoothly.
