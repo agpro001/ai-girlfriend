@@ -116,7 +116,7 @@ export default function AdminWallpapers() {
             {walls.map(w => (
               <div key={w.id} className="relative rounded-xl overflow-hidden border border-border/50 h-40">
                 <div className="absolute inset-0">
-                  <LiveWallpaper wp={w} />
+                  <LiveWallpaper wp={w} contained />
                 </div>
                 <div className="absolute inset-0 bg-background/30 hover:bg-background/10 transition-colors flex flex-col justify-between p-2">
                   <div className="flex items-center justify-between">
