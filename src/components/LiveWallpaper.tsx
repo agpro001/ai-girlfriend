@@ -27,7 +27,7 @@ export default function LiveWallpaper({ wp, contained = false }: { wp: Wallpaper
   switch (wp.preset) {
     case 'aurora':
       return (
-        <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+        <div className={`${pos} pointer-events-none overflow-hidden`}>
           <motion.div
             className="absolute -inset-1/2 blur-3xl opacity-50"
             style={{ background: `radial-gradient(circle at 30% 30%, ${p}, transparent 50%), radial-gradient(circle at 70% 60%, ${a}, transparent 55%)` }}
@@ -39,7 +39,7 @@ export default function LiveWallpaper({ wp, contained = false }: { wp: Wallpaper
     case 'neon-grid':
       return (
         <div
-          className="fixed inset-0 -z-10 pointer-events-none"
+          className={`${pos} pointer-events-none`}
           style={{
             backgroundColor: '#05050a',
             backgroundImage: `linear-gradient(${p}33 1px, transparent 1px), linear-gradient(90deg, ${a}33 1px, transparent 1px)`,
@@ -52,7 +52,7 @@ export default function LiveWallpaper({ wp, contained = false }: { wp: Wallpaper
       );
     case 'particles':
       return (
-        <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+        <div className={`${pos} pointer-events-none overflow-hidden`}>
           {Array.from({ length: 30 }).map((_, i) => (
             <motion.div
               key={i}
@@ -66,7 +66,7 @@ export default function LiveWallpaper({ wp, contained = false }: { wp: Wallpaper
       );
     case 'matrix':
       return (
-        <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" style={{ background: '#000' }}>
+        <div className={`${pos} pointer-events-none overflow-hidden`} style={{ background: '#000' }}>
           {Array.from({ length: 20 }).map((_, i) => (
             <motion.div
               key={i}
@@ -85,7 +85,7 @@ export default function LiveWallpaper({ wp, contained = false }: { wp: Wallpaper
       );
     case 'petals':
       return (
-        <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+        <div className={`${pos} pointer-events-none overflow-hidden`}>
           {Array.from({ length: 18 }).map((_, i) => (
             <motion.div
               key={i}
