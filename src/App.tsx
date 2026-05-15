@@ -22,6 +22,7 @@ import AdminStats from "./pages/AdminStats";
 import AdminModels from "./pages/AdminModels";
 import AdminWallpapers from "./pages/AdminWallpapers";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
 import AppWallpaper from "./components/AppWallpaper";
 
 const queryClient = new QueryClient();
@@ -44,13 +45,13 @@ const App = () => (
           <Route path="/community/:postId" element={<ProtectedRoute><CommunityPost /></ProtectedRoute>} />
           <Route path="/stats/:companionId" element={<ProtectedRoute><RelationshipStats /></ProtectedRoute>} />
           <Route path="/u/:username" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-          <Route path="/admin/moderation" element={<ProtectedRoute><AdminModeration /></ProtectedRoute>} />
-          <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
-          <Route path="/admin/users/:userId" element={<ProtectedRoute><AdminUserDetail /></ProtectedRoute>} />
-          <Route path="/admin/conversations/:conversationId" element={<ProtectedRoute><AdminConversation /></ProtectedRoute>} />
-          <Route path="/admin/stats" element={<ProtectedRoute><AdminStats /></ProtectedRoute>} />
-          <Route path="/admin/models" element={<ProtectedRoute><AdminModels /></ProtectedRoute>} />
-          <Route path="/admin/wallpapers" element={<ProtectedRoute><AdminWallpapers /></ProtectedRoute>} />
+          <Route path="/admin/moderation" element={<AdminRoute><AdminModeration /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/users/:userId" element={<AdminRoute><AdminUserDetail /></AdminRoute>} />
+          <Route path="/admin/conversations/:conversationId" element={<AdminRoute><AdminConversation /></AdminRoute>} />
+          <Route path="/admin/stats" element={<AdminRoute><AdminStats /></AdminRoute>} />
+          <Route path="/admin/models" element={<AdminRoute><AdminModels /></AdminRoute>} />
+          <Route path="/admin/wallpapers" element={<AdminRoute><AdminWallpapers /></AdminRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
