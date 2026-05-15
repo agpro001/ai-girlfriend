@@ -1,51 +1,43 @@
-## Goals
+## Goal
 
-1. Session must persist across browser refresh — no forced re-login until the user clicks Logout.
-2. All admin features fully functional with no errors.
+Make the admin sections open reliably for the admin account, prevent login loss on refresh, and handle the Gemini API key securely without exposing it in the frontend.
 
-## Root causes found
+## Findings
 
-**A. Refresh logout bug (`src/hooks/useAuth.tsx`)**
-The hook calls `setLoading(false)` from BOTH `onAuthStateChange` and `getSession()`. Supabase fires an `INITIAL_SESSION` event very early — sometimes with `session = null` for a tick before storage is rehydrated. `loading` flips to `false` while `user` is still `null`, so `ProtectedRoute` immediately redirects to `/auth`. Then `getSession()` resolves with the real user, but the redirect already happened.
+- The hosted backend is healthy.
+- The account `adityagupta1234.in@gmail.com` is already marked as admin in the backend.
+- The admin redirect loop is coming from client-side auth/role timing and navigation, not from missing admin data.
+- Admin bottom-nav links are visible, but clicking admin links currently lands back on `/dashboard`.
+- The app already uses backend AI functions with Lovable AI; the raw Gemini key should not be hardcoded into React code.
 
-**B. Admin Wallpapers thumbnails broken (`src/components/LiveWallpaper.tsx` + `src/pages/AdminWallpapers.tsx`)**
-`LiveWallpaper` always renders with `fixed inset-0 -z-10`, meaning when used as a grid-cell preview it escapes its container and all 9 wallpapers stack on the page background. Previews appear empty.
+## Implementation plan
 
-**C. No active wallpaper exists yet**
-`user_wallpaper_settings` is empty in the DB, so new users see no background. Need a sensible default global wallpaper seeded so the system feels alive out of the box.
+1. **Stabilize auth session state**
+  - Refactor `useAuth` to share one auth state across the app instead of every component creating its own independent auth listener.
+  - Restore the saved session once on app load and keep `loading` true until restoration finishes.
+  - Ensure refresh keeps the user logged in until explicit logout.
+2. **Stabilize admin role checks**
+  - Refactor `useUserRole` so it waits for a real user id before checking admin status.
+  - Add an error-safe state so failed/early role checks do not instantly mark the admin as non-admin.
+  - Prevent stale role results from redirecting routes while a newer check is still in progress.
+3. **Create one reusable admin route guard**
+  - Add an `AdminRoute` guard that combines auth loading and role loading.
+  - While either is loading, show the existing loading UI.
+  - Only redirect after auth and role checks are both complete.
+  - Use this guard for all admin routes: Walls, Models, Users, User Detail, Stats, Conversation, and Moderation.
+4. **Fix admin navigation behavior**
+  - Keep admin bottom nav links as real route links, but ensure route guards no longer bounce them back during role-check races.
+  - Align moderation’s non-admin fallback with the rest of admin routes.
+5. **Verify admin features and refresh behavior**
+  - Log in as the provided admin account.
+  - Open `/admin/wallpapers`, `/admin/models`, `/admin/users`, `/admin/stats`, and `/admin/moderation`.
+  - Refresh on an admin route and confirm the session remains and the page does not redirect to dashboard.
+  - Check browser console/network for errors during these flows.
+6. **Gemini API key handling**
+  - Do not place the provided Gemini key in frontend code.
+  - Since the app already uses secure backend AI functions, keep AI calls backend-side.
+  - If a custom Gemini key must be used instead of the existing Lovable AI setup, store it as a backend secret first, then update only backend function code to read it securely.
 
-**D. Admin nav lacks Moderation visibility verification**
-Routes are wired correctly; no fix needed beyond confirming.
+&nbsp;
 
-## Plan
-
-### 1. Fix auth persistence
-
-Rewrite `useAuth` so:
-
-- `onAuthStateChange` is set up first, but only updates `user` (it does NOT toggle `loading`).
-- `getSession()` is the single source that sets `loading = false` once storage rehydration completes.
-- Result: `ProtectedRoute` waits for the real session before deciding.
-
-### 2. Make `LiveWallpaper` container-aware
-
-Add a `contained?: boolean` prop. When true, swap `fixed inset-0 -z-10` → `absolute inset-0`. Update `AdminWallpapers` previews to pass `contained`.
-
-### 3. Seed a default global wallpaper
-
-Insert one row into `user_wallpaper_settings` with `is_global = true` pointing at "Aurora Flow" so all users get a live background immediately. Admins can change it from the Walls page.
-
-### 4. Verify and validate
-
-- Run the db linter and typecheck output from the dev build.
-- Manually re-check admin pages render: Users, User Detail (mood control), Conversation read-only, Stats, Models save+broadcast, Walls thumbnails + set-as-global, Moderation queue.
-- Confirm normal users see no admin nav items and no admin labels anywhere on shared pages.
-
-## Technical notes
-
-- `useAuth` change is the standard "set listener first, then `getSession`, only toggle `loading` after `getSession` resolves" pattern.
-- `LiveWallpaper` switch is purely a className branch — no API change to `AppWallpaper`.
-- Default global wallpaper insert is one SQL row; idempotent guard via `WHERE NOT EXISTS`.
-- No new tables, no new RLS policies, no schema changes.
-
-All features must working properly and really no simulation all real features working correctly.Smoothly.
+All features must work really properly and correctly. No more errors. First chk then analyze and Fix everything.
